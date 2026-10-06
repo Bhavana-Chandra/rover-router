@@ -1,0 +1,18 @@
+{
+  "k4_seed16": {
+    "best_order": [
+      2,
+      0,
+      1,
+      3
+    ],
+    "best_length": 16,
+    "optimal_length": 14,
+    "top_is_valid": false,
+    "valid_fraction": 0.00048828125,
+    "optimal_mass": 0.0,
+    "seconds": 3.701040267944336,
+    "evals": 29,
+    "reps": 1
+  }
+}

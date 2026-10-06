@@ -1,0 +1,12 @@
+K=3, 20 seeds
+  exact            mean ratio 1.000, optimal on 100%, route found on 100%
+  greedy           mean ratio 1.013, optimal on 90%, route found on 100%
+  random_sampling  mean ratio 1.000, optimal on 100%, route found on 100%, mean valid shot fraction 0.0121
+  qaoa_p1          mean ratio 1.000, optimal on 100%, route found on 100%, mean valid shot fraction 0.0401
+  qaoa_p2          mean ratio 1.000, optimal on 100%, route found on 100%, mean valid shot fraction 0.0546
+K=4, 20 seeds
+  exact            mean ratio 1.000, optimal on 100%, route found on 100%
+  greedy           mean ratio 1.026, optimal on 80%, route found on 100%
+  random_sampling  mean ratio 1.170, optimal on 25%, route found on 65%, mean valid shot fraction 0.0003
+  qaoa_p1          mean ratio 1.132, optimal on 45%, route found on 75%, mean valid shot fraction 0.0027
+  qaoa_p2          mean ratio 1.118, optimal on 60%, route found on 95%, mean valid shot fraction 0.0027
