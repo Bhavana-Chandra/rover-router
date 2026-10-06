@@ -111,6 +111,18 @@ python run_benchmark.py --replot (redraw the chart from the saved CSV)
 python -m pytest                 (tests)
 ```
 
+## Run it in Google Colab (no install)
+
+If you do not want to set up Python locally, there is a notebook that runs the same demo in the browser.
+
+1. Open https://colab.research.google.com/github/Bhavana-Chandra/rover-router/blob/main/demo_colab.ipynb
+2. Sign in with a Google account if Colab asks.
+3. Choose Runtime, then Run all.
+4. Wait about a minute. The notebook clones this repo, installs Qiskit, runs `demo.py`, and shows the route figure and the saved benchmark chart.
+5. If Colab asks you to restart the runtime after the install step, restart it and choose Run all again.
+
+It runs the same simulation as the local demo. The last cell optionally re-runs a small benchmark, but three lakes is too few to compare methods, so the 20-lake table above is the one to read. I have tested the notebook's commands in a clean local environment, but not inside Colab itself, so tell me if a cell fails there.
+
 ## How this was built
 
 I used Claude Code for coding assistance while building this. [FILL: anything the hackathon's AI-tools policy requires. I will check the Devfolio page.]
