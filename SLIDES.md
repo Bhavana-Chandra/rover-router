@@ -22,14 +22,14 @@ Numbers are from `results/summary.txt` (20 random lakes per size) and the demo s
 ## 3. Why quantum
 
 - QAOA is a quantum optimisation algorithm that researchers are testing on routing problems.
-- Earlier papers report that it struggles even on small travelling salesman cases.
+- Whether it helps on small, noisy-free simulated cases is an open question we can test ourselves.
 - So this is a test, not a claim: we build it, run it, and report what happens.
 
 ## 4. Approach
 
 - 5x5 lake grid, one dock, 4 debris spots, Manhattan distance.
 - Route as a QUBO: variable x[i][t] = spot i visited at step t. 16 variables, 16 qubits.
-- Penalties force each spot once and each step one spot. We scanned the penalty weight: below 4 the QUBO's best answer was invalid.
+- Penalties force each spot once and each step one spot. We scanned the penalty weight on 15 lakes: weights of 6 or more always gave the optimal route as the QUBO's best answer, 1 to 4 did not.
 - QAOA (depth 1 and 2, COBYLA) on the Aer simulator.
 - Compared with greedy nearest-neighbour, exact brute force, and a random-sampling control.
 
