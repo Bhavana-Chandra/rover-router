@@ -81,3 +81,99 @@ def all_energies(Q, const):
     idx = np.arange(2 ** n)
     X = ((idx[:, None] >> np.arange(n)) & 1).astype(float)
     return np.einsum("ab,bc,ac->a", X, Q, X) + const
+
+
+# ---------------------------------------------------------------- QAOA part
+import time
+
+from qiskit.quantum_info import SparsePauliOp
+
+
+def qubo_to_ising(Q, const):
+    """Substitute x = (1 - Z)/2 so the QUBO energy becomes a sum of Pauli-Z terms.
+
+    Qubit v is variable v (Qiskit's little-endian order), the same convention
+    all_energies() uses, so bitstring integers line up between the two.
+    """
+    n = Q.shape[0]
+    terms = {}  # tuple of qubit indices -> coefficient
+
+    def add(qubits, w):
+        terms[qubits] = terms.get(qubits, 0.0) + w
+
+    offset = const
+    for a in range(n):
+        for b in range(a, n):
+            w = Q[a, b]
+            if w == 0:
+                continue
+            if a == b:  # w * (1 - Za)/2
+                offset += w / 2
+                add((a,), -w / 2)
+            else:  # w * (1 - Za)(1 - Zb)/4
+                offset += w / 4
+                add((a,), -w / 4)
+                add((b,), -w / 4)
+                add((a, b), w / 4)
+    paulis = []
+    for qs, w in terms.items():
+        label = ["I"] * n
+        for q in qs:
+            label[n - 1 - q] = "Z"  # rightmost character is qubit 0
+        paulis.append(("".join(label), w))
+    paulis.append(("I" * n, offset))
+    return SparsePauliOp.from_list(paulis).simplify()
+
+
+def solve_qaoa(dock, debris, reps=1, penalty=None, shots=4096, maxiter=100, seed=0):
+    """Run QAOA on the simulator and return the metrics from PRD section 4.3.1."""
+    from qiskit_aer.primitives import SamplerV2
+    from qiskit_algorithms import QAOA
+    from qiskit_algorithms.optimizers import COBYLA
+    from lake import route_length
+    from classical import exact
+
+    k = len(debris)
+    Q, const = build_qubo(dock, debris, penalty)
+    op = qubo_to_ising(Q, const)
+
+    # Aer cannot run the high-level QAOA block directly, so decompose it into
+    # basic gates with a preset pass manager before sampling.
+    from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
+    from qiskit_aer import AerSimulator
+    pm = generate_preset_pass_manager(optimization_level=1, backend=AerSimulator())
+    sampler = SamplerV2(default_shots=shots, seed=seed)
+    qaoa = QAOA(sampler, COBYLA(maxiter=maxiter), reps=reps,
+                initial_point=np.full(2 * reps, 0.1), transpiler=pm)
+    t0 = time.time()
+    res = qaoa.compute_minimum_eigenvalue(op)
+    elapsed = time.time() - t0
+
+    # eigenstate maps bitstring -> probability. The leftmost character is the
+    # highest qubit, so variable v is the character at position n-1-v.
+    _, opt_len = exact(dock, debris)
+    n = k * k
+    valid_mass, opt_mass, best = 0.0, 0.0, None
+    top_bits = max(res.eigenstate, key=res.eigenstate.get)
+    top_order = decode([int(top_bits[n - 1 - v]) for v in range(n)], k)
+    for bits, p in res.eigenstate.items():
+        order = decode([int(bits[n - 1 - v]) for v in range(n)], k)
+        if order is None:
+            continue
+        length = route_length(dock, debris, order)
+        valid_mass += p
+        if length == opt_len:
+            opt_mass += p
+        if best is None or length < best[1]:
+            best = (order, length)
+    return {
+        "best_order": best[0] if best else None,
+        "best_length": best[1] if best else None,
+        "optimal_length": opt_len,
+        "top_is_valid": top_order is not None,
+        "valid_fraction": valid_mass,
+        "optimal_mass": opt_mass,
+        "seconds": elapsed,
+        "evals": res.cost_function_evals,
+        "reps": reps,
+    }

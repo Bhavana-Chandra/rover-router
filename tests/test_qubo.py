@@ -42,3 +42,12 @@ def test_decode_rejects_invalid():
     assert decode([1, 0, 0, 0, 1, 0, 0, 0, 1], 3) == [0, 1, 2]
     assert decode([1, 1, 0, 0, 0, 0, 0, 0, 1], 3) is None
     assert decode([0] * 9, 3) is None
+
+
+def test_ising_diagonal_matches_qubo_energies():
+    # Guards against a bit-order mix-up between the QUBO and the QAOA operator.
+    from qaoa_tsp import qubo_to_ising
+    dock, debris = make_lake(5, k=3)
+    Q, c = build_qubo(dock, debris)
+    diag = np.real(np.diag(qubo_to_ising(Q, c).to_matrix(sparse=True).toarray()))
+    assert np.allclose(diag, all_energies(Q, c))
